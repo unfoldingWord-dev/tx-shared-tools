@@ -1,9 +1,11 @@
 master:
+
 .. image:: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
 
 develop:
+
 .. image:: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools.svg?branch=develop
     :alt: Build Status
     :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
