@@ -22,5 +22,5 @@ setup(
     packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'manager'],
     long_description=read('README.rst'),
     classifiers=[],
-    requires=['pygithub', ]
+    requires=['pygithub', 'boto3', 'requires']
 )
