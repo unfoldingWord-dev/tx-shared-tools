@@ -20,7 +20,7 @@ setup(
     keywords="unfoldingWord python tools tx",
     url="https://github.org/unfoldingWord-dev/tx-shared-tools",
     packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'manager'],
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     classifiers=[],
     requires=['pygithub', ]
 )
