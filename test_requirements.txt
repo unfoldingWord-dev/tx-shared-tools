@@ -1,2 +1,4 @@
 future
 requests
+boto3
+

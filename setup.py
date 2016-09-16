@@ -1,31 +1,26 @@
-from setuptools import setup, find_packages
-from codecs import open
-from os import path
+import os
+from setuptools import setup
 
-here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, "README.md"), "r") as f:
-    long_description = f.read()
+# Utility function to read the README file.
+# Used for the long_description.  It's nice, because now 1) we have a top level
+# README file and 2) it's easier to type in the README file than to put a raw
+# string in below ...
+def read(f_name):
+    return open(os.path.join(os.path.dirname(__file__), f_name)).read()
+
 
 setup(
     name="tx-shared-tools",
-    version="1.0.0",
-    description="A python library for shared tools",
-    long_description=long_description,
-    url="https://github.com/unfoldingWord-dev/tx-shared-tools",
+    version="0.0.1",
     author="unfoldingWord",
-    author_email="richard_mahn@wycliffeassociates.org"
+    author_email="unfoldingword.org",
+    description="A collection of useful scripts for tX",
     license="MIT",
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 2.7",
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5'
-    ],
-    keywords=["unfoldingword", "tx", "toops"],
-    packages=find_packages(),
-    install_requires=["future", "requests"],
-    test_suite="tests"
+    keywords="unfoldingWord python tools tx",
+    url="https://github.org/unfoldingWord-dev/tx-shared-tools",
+    packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'manager'],
+    long_description=read('README.md'),
+    classifiers=[],
+    requires=['pygithub', ]
 )
