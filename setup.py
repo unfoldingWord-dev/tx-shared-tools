@@ -25,7 +25,6 @@ setup(
     install_requires=[
         'requires',
         'boto3',
-        'zipfile',
         'gogs_client'
 
     ],
