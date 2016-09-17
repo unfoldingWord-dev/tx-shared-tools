@@ -7,13 +7,5 @@
 #  Contributors:
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
 
-import os
-import boto3
+import gogs_client
 
-
-def put_job(job):
-    pass
-
-
-def update_job(job):
-    pass

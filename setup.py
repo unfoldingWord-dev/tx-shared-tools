@@ -19,7 +19,7 @@ setup(
     license="MIT",
     keywords="unfoldingWord python tools tx",
     url="https://github.org/unfoldingWord-dev/tx-shared-tools",
-    packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'gogs', 'manager'],
+    packages=['general_tools', 'aws_tools', 'client_tools', 'converter_tools', 'door43_tools', 'gogs_tools', 'manager_tools'],
     long_description=read('README.rst'),
     classifiers=[],
     install_requires=[
