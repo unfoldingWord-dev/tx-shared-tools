@@ -12,7 +12,7 @@ def read(f_name):
 
 setup(
     name="tx-shared-tools",
-    version="0.0.1",
+    version="0.0.2",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
