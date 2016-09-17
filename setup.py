@@ -15,12 +15,19 @@ setup(
     version="0.0.1",
     author="unfoldingWord",
     author_email="unfoldingword.org",
-    description="A collection of useful scripts for tX",
+    description="A collection of useful scripts abd classes for tX",
     license="MIT",
     keywords="unfoldingWord python tools tx",
     url="https://github.org/unfoldingWord-dev/tx-shared-tools",
-    packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'manager'],
+    packages=['general_tools', 'aws', 'client', 'converter', 'door43', 'gogs', 'manager'],
     long_description=read('README.rst'),
     classifiers=[],
-    requires=['pygithub', 'boto3', 'requires']
+    install_requires=[
+        'requires',
+        'boto3',
+        'zipfile',
+        'gogs_client'
+
+    ],
+    requires=['pygithub']
 )
