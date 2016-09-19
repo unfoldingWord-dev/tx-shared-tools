@@ -7,46 +7,32 @@ import json
 import requests
 
 from datetime import datetime, timedelta
-from boto3.dynamodb.conditions import Key, Attr
-from gogs_tools import user_handler
+from boto3.dynamodb.conditions import Attr
+
+import tx_tools
+from tx_tools.db_handler import TxDBHandler
+from gogs_tools.gogs_handler import GogsTools
+
+class TxModule(object):
+    valid_module_fields = [
+    ]
+
+    def __init__(self, name):
+        self.name = name
+
+    def populate(self, data):
+        for key, value in data.iteritems():
+            if key not in self.valid_module_fields:
+                raise Exception('Invalid module field given: {0}'.format(key))
+            setattr(self, key, value)
+
+    def get_module(self, job_id):
+        return TxDBHandler(job_id)
+
+    def update_job(self, job):
+        return TxDBHandler.update_job(job)
 
 
-class TXManager(object):
-    def __init__(self, data=None):
-        self.data = data
-        self.log = []
-        self.errors = []
-        self.warnings = []
-
-    def log_message(self, message):
-        print('{0}: {1}'.format('tx-manager', message))
-        self.log.append('{0}: {1}'.format('tx-manager', message))
-
-    def error_message(self, message):
-        print('{0}: {1}'.format('tx-manager', message))
-        self.errors.append('{0}: {1}'.format('tx-manager', message))
-
-    def warning_message(self, message):
-        print('{0}: {1}'.format('tx-manager', message))
-        self.warnings.append('{0}: {1}'.format('tx-manager', message))
-
-    def authenticate_gogs_user(self):
-        data = self.data
-
-        if 'gogs_url' not in data or not data['gogs_url']:
-            raise Exception('"gogs_url" not in payload')
-        if 'user_token' not in data or not data['user_token']:
-            raise Exception('"user_token" not in payload')
-
-        gogs_url = data['gogs_url']
-        user_token = data['gogs_user_token']
-
-        success = user_handler.authenticate_user_token(gogs_url, user_token)
-
-        if not success:
-            raise Exception('"user_token" invalid, needs to be a valid Gogs user at {0}'.format(data['gogs_url']))
-
-        return success
 
     def list_endpoints(self):
         return {

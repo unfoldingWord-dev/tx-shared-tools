@@ -8,9 +8,9 @@
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
 
 
-def put_commit_deploy(commit):
-    pass
+class Door43DBHandler(object):
+    def put_commit_deploy(self, commit):
+        pass
 
-
-def update_commit_deploy(commit):
-    pass
+    def update_commit_deploy(self, commit):
+        pass

@@ -8,9 +8,9 @@
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
 
 
-def put_gogs_commit(commit):
-    pass
+class ClientDBHandler(object):
+    def put_gogs_job(self, job):
+        pass
 
-
-def update_gogs_commit(commit):
-    pass
+    def update_gogs_job(self, job):
+        pass
