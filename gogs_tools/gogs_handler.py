@@ -11,7 +11,7 @@ from gogs_client import GogsApi
 from gogs_client import GogsToken
 
 
-class GogsHandler(object)
+class GogsHandler(object):
     def __init__(self, gogs_url):
         self.gogs_url = gogs_url
         self.gogs_api = GogsApi(gogs_url)

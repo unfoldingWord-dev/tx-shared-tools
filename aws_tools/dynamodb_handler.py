@@ -6,17 +6,22 @@
 #
 #  Contributors:
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
-
-import boto3
+#
+#  DynamoDBHandler
 
 from six import iteritems
+from boto3 import Session
 from boto3.dynamodb.conditions import Attr, Key
 
-class TxDBHandler(object):
 
-    def __init__(self, table_name):
-        self.dynamodb = boto3.resource('dynamodb')
-        self.table = self.dynamodb.Table(table_name)
+class DynamoDBHandler(object):
+
+    def __init__(self, table_name, aws_access_key_id, aws_secret_access_key, aws_region_name='us-west-2'):
+        self.session = Session(aws_access_key_id=aws_access_key_id,
+                               aws_secret_access_key=aws_access_key_id,
+                               region_name=aws_region_name)
+        self.resource = self.session.resource('dynamodb')
+        self.table = self.resource.Table(table_name)
 
     def get_item(self, key):
         response = self.table.get_item(
