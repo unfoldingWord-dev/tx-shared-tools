@@ -8,7 +8,7 @@
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
 
 from gogs_client import GogsApi
-from gogs_client import GogsToken
+from gogs_client import Token
 
 
 class GogsHandler(object):
@@ -17,7 +17,7 @@ class GogsHandler(object):
         self.gogs_api = GogsApi(gogs_url)
 
     def authenticate_user_token(self, user_token):
-        return self.gogs_api.valid_authentication(GogsToken(user_token))
+        return self.gogs_api.valid_authentication(Token(user_token))
 
     def get_user(self, user_token):
         valid = self.authenticate_user_token(user_token)
