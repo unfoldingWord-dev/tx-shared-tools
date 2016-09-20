@@ -11,7 +11,7 @@ def read(f_name):
 
 
 setup(
-    name="tx-shared-tools",
+    name="tx_shared_tools",
     version="0.0.2",
     author="unfoldingWord",
     author_email="unfoldingword.org",
