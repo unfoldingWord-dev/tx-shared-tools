@@ -10,12 +10,12 @@ def read(f_name):
     return open(os.path.join(os.path.dirname(__file__), f_name)).read()
 
 setup(
-    name="tx-shared-tools",
+    name="tx_shared_tools",
     version="0.0.6",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
-    url="https://github.org/unfoldingWord-dev/tx-shared-tools",
+    url="https://github.org/unfoldingWord-dev/tx_shared_tools",
     license="MIT",
     keywords="unfoldingWord python tools tx",
     packages=['aws_tools', 'gogs_tools'],

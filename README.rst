@@ -1,16 +1,16 @@
 master:
 
-.. image:: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools.svg?branch=master
+.. image:: https://travis-ci.org/unfoldingWord-dev/tx_shared_tools.svg?branch=master
     :alt: Build Status
-    :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
+    :target: https://travis-ci.org/unfoldingWord-dev/tx_shared_tools
 
 develop:
 
-.. image:: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools.svg?branch=develop
+.. image:: https://travis-ci.org/unfoldingWord-dev/tx_shared_tools.svg?branch=develop
     :alt: Build Status
-    :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
+    :target: https://travis-ci.org/unfoldingWord-dev/tx_shared_tools
 
-tx-shared-tools
+tx_shared_tools
 ===============
 
 Shared tools to be used by all tx-* clients, managers and modules
@@ -21,4 +21,4 @@ The easiest way to install is via ``pip``::
 
     $ pip install tx_shared_tools 
 
-Documentation for the module can be found `here <http://pythonhosted.org/tx-shared-tools/>`_.
+Documentation for the module can be found `here <http://pythonhosted.org/tx_shared_tools/>`_.
