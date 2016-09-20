@@ -10,7 +10,7 @@ def read(f_name):
     return open(os.path.join(os.path.dirname(__file__), f_name)).read()
 
 setup(
-    name="tx_shared_tools",
+    name="tx-shared-tools",
     version="0.0.7",
     author="unfoldingWord",
     author_email="unfoldingword.org",
