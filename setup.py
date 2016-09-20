@@ -11,7 +11,7 @@ def read(f_name):
 
 setup(
     name="tx-shared-tools",
-    version="0.0.5",
+    version="0.0.6",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
@@ -25,8 +25,6 @@ setup(
         'requires',
         'boto3',
         'gogs_client'
-
-    ],
-    requires=['pygithub']
+    ]
 )
 
