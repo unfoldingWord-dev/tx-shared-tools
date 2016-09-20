@@ -9,13 +9,13 @@ from setuptools import setup
 def read(f_name):
     return open(os.path.join(os.path.dirname(__file__), f_name)).read()
 
-
 setup(
-    name="tx_shared_tools",
-    version="0.0.4",
+    name="tx-shared-tools",
+    version="0.0.5",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
+    url="https://github.org/unfoldingWord-dev/tx-shared-tools",
     license="MIT",
     keywords="unfoldingWord python tools tx",
     packages=['general_tools', 'aws_tools', 'client_tools', 'door43_tools', 'gogs_tools'],
@@ -29,3 +29,4 @@ setup(
     ],
     requires=['pygithub']
 )
+
