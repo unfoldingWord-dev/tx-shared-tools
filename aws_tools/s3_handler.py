@@ -16,7 +16,7 @@ class S3Handler(object):
     
     def __init__(self, aws_access_key_id, aws_secret_access_key, aws_region_name='us-west-2'):
         self.session = Session(aws_access_key_id=aws_access_key_id,
-                               aws_secret_access_key=aws_access_key_id,
+                               aws_secret_access_key=aws_secret_access_key,
                                region_name=aws_region_name)
         self.client = self.session.client('s3')
         self.resource = self.session.resource('s3')
