@@ -12,13 +12,12 @@ def read(f_name):
 
 setup(
     name="tx_shared_tools",
-    version="0.0.3",
+    version="0.0.4",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
     license="MIT",
     keywords="unfoldingWord python tools tx",
-    url="https://github.org/unfoldingWord-dev/tx-shared-tools",
     packages=['general_tools', 'aws_tools', 'client_tools', 'door43_tools', 'gogs_tools'],
     long_description=read('README.rst'),
     classifiers=[],
