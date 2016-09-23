@@ -1,0 +1,3 @@
+requires
+boto3
+gogs_client
