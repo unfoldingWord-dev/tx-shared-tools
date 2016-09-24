@@ -4,11 +4,20 @@ master:
     :alt: Build Status
     :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
 
+.. image:: https://coveralls.io/repos/github/unfoldingWord-dev/tx-shared-tools/badge.svg?branch=master)
+    :alt: Coveralls
+    :target: https://coveralls.io/github/unfoldingWord-dev/tx-shared-tools?branch=master
+
 develop:
 
 .. image:: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools.svg?branch=develop
     :alt: Build Status
     :target: https://travis-ci.org/unfoldingWord-dev/tx-shared-tools
+
+.. image:: https://coveralls.io/repos/github/unfoldingWord-dev/tx-shared-tools/badge.svg?branch=develop)
+    :alt: Coveralls
+    :target: https://coveralls.io/github/unfoldingWord-dev/tx-shared-tools?branch=develop
+
 
 tx-shared-tools
 ===============
