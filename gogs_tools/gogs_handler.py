@@ -22,6 +22,6 @@ class GogsHandler(object):
     def get_user(self, user_token):
         valid = self.authenticate_user_token(user_token)
         if valid:
-            self.gogs_api.authenticated_user(user_token)
+            return self.gogs_api.authenticated_user(Token(user_token))
         else:
             return None

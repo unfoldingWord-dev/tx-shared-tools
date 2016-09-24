@@ -22,7 +22,7 @@ develop:
 tx-shared-tools
 ===============
 
-Shared tools to be used by all tx-* clients, shared-toolss and modules
+Shared tools to be used by all tx-* clients, managers and modules
 
 Issue for its creation at https://github.com/unfoldingWord-dev/door43.org/issues/124
 
