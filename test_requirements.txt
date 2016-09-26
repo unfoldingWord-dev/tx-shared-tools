@@ -1,4 +1,3 @@
-future
-requests
 boto3
-
+bs4
+gogs_client
