@@ -12,7 +12,7 @@ def read(f_name):
 setup(
     name="tx-shared-tools",
     packages=['aws_tools', 'client_tools', 'door43_tools', 'general_tools', 'gogs_tools'],
-    version="0.1.17",
+    version="0.1.22",
     author="unfoldingWord",
     author_email="unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
@@ -22,9 +22,10 @@ setup(
     long_description=read('README.rst'),
     classifiers=[],
     install_requires=[
-        'requires',
+        'requests',
         'boto3',
-        'gogs_client'
+        'gogs_client',
+        'bs4'
     ]
 )
 
