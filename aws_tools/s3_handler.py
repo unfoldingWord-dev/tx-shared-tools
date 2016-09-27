@@ -15,6 +15,7 @@ import botocore
 from boto3.session import Session
 from general_tools.file_utils import get_mime_type
 
+
 class S3Handler(object):
     
     def __init__(self, bucket_name=None, aws_access_key_id=None, aws_secret_access_key=None, aws_region_name='us-west-2'):
@@ -33,6 +34,10 @@ class S3Handler(object):
         if bucket_name:
             self.bucket = self.resource.Bucket(bucket_name)
 
+    def download_file(self, key, local_file):
+        print(key, local_file)
+        self.resource.meta.client.download_file(self.bucket_name, key, local_file)
+
     # Downloads all the files in S3 that have a prefix of `key_prefix` from `bucket` to the `local` directory
     def download_dir(self, key_prefix, local):
         paginator = self.client.get_paginator('list_objects')
@@ -44,7 +49,7 @@ class S3Handler(object):
                 for f in result.get('Contents'):
                     if not os.path.exists(os.path.dirname(local + os.sep + f.get('Key'))):
                         os.makedirs(os.path.dirname(local + os.sep + f.get('Key')))
-                    self.resource.meta.client.download_file(f.get('Key'), local + os.sep + f.get('Key'))
+                    self.download_file(f.get('Key'), local + os.sep + f.get('Key'))
 
     def key_exists(self, key, bucket_name=None):
         if not bucket_name:
