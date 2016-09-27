@@ -35,7 +35,6 @@ class S3Handler(object):
             self.bucket = self.resource.Bucket(bucket_name)
 
     def download_file(self, key, local_file):
-        print(key, local_file)
         self.resource.meta.client.download_file(self.bucket_name, key, local_file)
 
     # Downloads all the files in S3 that have a prefix of `key_prefix` from `bucket` to the `local` directory
