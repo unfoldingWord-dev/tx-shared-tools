@@ -14,6 +14,8 @@ import os
 import zipfile
 import sys
 
+from mimetypes import MimeTypes
+
 # we need this to check for string versus object
 PY3 = sys.version_info[0] == 3
 
@@ -33,6 +35,7 @@ def unzip(source_file, destination_dir):
     with zipfile.ZipFile(source_file) as zf:
         zf.extractall(destination_dir)
 
+
 def add_file_to_zip(zip_file, filename, arcname=None, compress_type=None):
     """
     Zip <filename> into <zip_file> as <arcname>.
@@ -42,6 +45,7 @@ def add_file_to_zip(zip_file, filename, arcname=None, compress_type=None):
     """
     with zipfile.ZipFile(zip_file, 'a') as zf:
         zf.write(filename, arcname, compress_type)
+
 
 def make_dir(dir_name, linux_mode=0o755, error_if_not_writable=False):
     """
@@ -96,6 +100,15 @@ def write_file(file_name, file_contents, indent=None):
 
     with codecs.open(file_name, 'w', encoding='utf-8') as out_file:
         out_file.write(text_to_write)
+
+
+def get_mime_type(path):
+    mime = MimeTypes()
+
+    mime_type = mime.guess_type(path)[0]
+    if not mime_type:
+        mime_type = "text/{0}".format(os.path.splitext(path)[1])
+    return mime_type
 
 
 if __name__ == '__main__':
