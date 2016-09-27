@@ -8,14 +8,16 @@
 #  Richard Mahn <richard_mahn@wycliffeassociates.org>
 
 import os
+import json
 import boto3
+import botocore
 
 from boto3.session import Session
-
+from general_tools.file_utils import get_mime_type
 
 class S3Handler(object):
     
-    def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, aws_region_name='us-west-2'):
+    def __init__(self, bucket_name=None, aws_access_key_id=None, aws_secret_access_key=None, aws_region_name='us-west-2'):
         if aws_access_key_id and aws_secret_access_key:
             session = Session(aws_access_key_id=aws_access_key_id,
                                    aws_secret_access_key=aws_secret_access_key,
@@ -26,16 +28,99 @@ class S3Handler(object):
             self.resource = boto3.resource('s3')
             self.client = boto3.client('s3')
 
-    # Downloads all the files in S3 that have a prefix of `dist` from `bucket` to the `local` directory
-    def download_dir(self, bucket, dist, local):
+        self.bucket_name = bucket_name
+        self.bucket = None
+        if bucket_name:
+            self.bucket = self.resource.Bucket(bucket_name)
+
+    # Downloads all the files in S3 that have a prefix of `key_prefix` from `bucket` to the `local` directory
+    def download_dir(self, key_prefix, local):
         paginator = self.client.get_paginator('list_objects')
-        for result in paginator.paginate(Bucket=bucket, Delimiter='/', Prefix=dist):
+        for result in paginator.paginate(Bucket=self.bucket_name, Delimiter='/', Prefix=key_prefix):
             if result.get('CommonPrefixes') is not None:
                 for subdir in result.get('CommonPrefixes'):
-                    self.download_dir(bucket, subdir.get('Prefix'), local)
+                    self.download_dir(subdir.get('Prefix'), local)
             if result.get('Contents') is not None:
                 for f in result.get('Contents'):
                     if not os.path.exists(os.path.dirname(local + os.sep + f.get('Key'))):
                         os.makedirs(os.path.dirname(local + os.sep + f.get('Key')))
-                    self.resource.meta.client.download_file(bucket, f.get('Key'), local + os.sep + f.get('Key'))
+                    self.resource.meta.client.download_file(f.get('Key'), local + os.sep + f.get('Key'))
 
+    def key_exists(self, key, bucket_name=None):
+        if not bucket_name:
+            bucket = self.bucket
+        else:
+            bucket = self.resource.Bucket(bucket_name)
+
+        try:
+            bucket.Object(key).load()
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                exists = False
+            else:
+                raise e
+        else:
+            exists = True
+
+        return exists
+
+    def copy(self, from_key, from_bucket=None, to_key=None, catch_exception=True):
+        if not to_key:
+            to_key = from_key
+        if not from_bucket:
+            from_bucket = self.bucket_name
+
+        if catch_exception:
+            try:
+                return self.resource.Object(self.bucket_name, to_key).copy_from(
+                    CopySource='{0}/{1}/build_log.json'.format(from_bucket, from_key))
+            except Exception:
+                return False
+        else:
+            return self.resource.Object(self.bucket_name, to_key).copy_from(
+                CopySource='{0}/{1}/build_log.json'.format(from_bucket, from_key))
+
+    def upload_file(self, path, key, cache_time=600):
+        self.bucket.upload_file(path, key, ExtraArgs={'ContentType': get_mime_type(path), 'CacheControl': 'max-age={0}'.format(cache_time)})
+
+    def get_object(self, key):
+        return self.resource.Object(self.bucket_name, key)
+
+    def get_file_contents(self, key, catch_exception = True):
+        if catch_exception:
+            try:
+                return self.get_object(key).get()['Body'].read()
+            except Exception:
+                return None
+        else:
+            return self.get_object(key).get()['Body'].read()
+
+    def get_json(self, key, catch_exception = True):
+        if catch_exception:
+            try:
+               return json.loads(self.get_file_contents(key))
+            except Exception:
+                return {}
+        else:
+            return json.loads(self.get_file_contents(key, catch_exception))
+
+    def get_objects(self, prefix=None, suffix=None):
+        filtered = []
+        objects = self.bucket.objects.filter(Prefix=prefix)
+        if objects and len(objects) > 0:
+            if suffix:
+                for obj in objects:
+                    if obj.key.endswith(suffix):
+                        filtered.append(obj)
+            else:
+                filtered = objects
+        return filtered
+
+    def delete_file(self, key, catch_exception=True):
+        if catch_exception:
+            try:
+                return self.resource.Object(self.bucket_name, key).delete()
+            except Exception:
+                return False
+        else:
+            return self.resource.Object(self.bucket_name, key).delete()
