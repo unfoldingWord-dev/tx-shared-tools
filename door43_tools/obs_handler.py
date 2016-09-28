@@ -37,55 +37,60 @@ class OBSInspection(object):
         self.content_dir = content_dir
         self.files = sorted(glob(os.path.join(self.content_dir, '*.html')))
         self.manifest = {}
+        self.warnings = []
+        self.errors = []
 
     def run(self):
-        # get manifest.json
-        with open(os.path.join(self.content_dir, 'manifest.json')) as manifest_file:
-            self.manifest = json.load(manifest_file)
-        return self.get_errors()
+        self.check_files()
 
-    def get_errors(self):
+    def check_files(self):
         """
-        Checks this chapter for errors
+        Checks this chapter for problems
         :returns list<str>
         """
-        errors = []
+        self.warnings = []
+
+        # get manifest.json
+        manifest_filepath = os.path.join(self.content_dir, 'manifest.json')
+        if os.path.isfile(manifest_filepath):
+            with open(manifest_filepath) as manifest_file:
+                self.manifest = json.load(manifest_file)
 
         for i in range(1, 51):
-            chapter = str(i).zfill(2)
-            filename = os.path.join(self.content_dir, chapter + '.html')
+            try:
+                chapter = str(i).zfill(2)
+                filename = os.path.join(self.content_dir, chapter + '.html')
 
-            if not os.path.isfile(filename):
-                errors.append('Chapter {0} does not exist!'.format(chapter))
-                continue
+                if not os.path.isfile(filename):
+                    self.warnings.append('Chapter {0} does not exist!'.format(chapter))
+                    continue
 
-            with open(filename) as chapter_file:
-                chapter_html = chapter_file.read()
+                with open(filename) as chapter_file:
+                    chapter_html = chapter_file.read()
 
-            soup = BeautifulSoup(chapter_html, 'html.parser')
+                soup = BeautifulSoup(chapter_html, 'html.parser')
 
-            content = soup.body.find(id='content')
+                if not soup.find('body'):
+                    self.warnings.append('Chapter {0} has no content!'.format(chapter))
+                    continue
 
-            if not content:
-                errors.append('Chapter {0} has not content!'.format(chapter))
-                continue
+                content = soup.body.find(id='content')
 
-            if not content.h1:
-                errors.append('Chapter {0} does not have a title!'.format(chapter))
+                if not content:
+                    self.warnings.append('Chapter {0} has no content!'.format(chapter))
+                    continue
 
-            frame_count = len(content.find_all('img'))
-            expected_frame_count = obs_data['chapters'][chapter]['frames']
-            if frame_count != expected_frame_count:
-                errors.append('Chapter {0} has only {0} frames.There should be {0}!'.format(chapter, frame_count, expected_frame_count))
+                if not content.find('h1'):
+                    self.warnings.append('Chapter {0} does not have a title!'.format(chapter))
 
-            if len(soup.content.p) != (frame_count * 2 + 1):
-                errors.append('Bible reference not found at end of chapter {0}!'.format(chapter))
+                frame_count = len(content.find_all('img'))
+                expected_frame_count = obs_data['chapters'][chapter]['frames']
+                if frame_count != expected_frame_count:
+                    self.warnings.append(
+                        'Chapter {0} has only {0} frames.There should be {0}!'.format(chapter, frame_count,
+                                                                                      expected_frame_count))
 
-        return errors
-
-    def __getitem__(self, item):
-        if item in self.__dict__:
-            return self.__dict__[item]
-
-    def __str__(self):
-        return self.__class__.__name__ + ' ' + self.number
+                if len(content.find_all('p')) != (frame_count * 2 + 1):
+                    self.warnings.append('Bible reference not found at end of chapter {0}!'.format(chapter))
+            except Exception as e:
+                self.errors.append(e.message)

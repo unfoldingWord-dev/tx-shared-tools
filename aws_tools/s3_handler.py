@@ -77,12 +77,12 @@ class S3Handler(object):
         if catch_exception:
             try:
                 return self.resource.Object(self.bucket_name, to_key).copy_from(
-                    CopySource='{0}/{1}/build_log.json'.format(from_bucket, from_key))
+                    CopySource='{0}/{1}'.format(from_bucket, from_key))
             except Exception:
                 return False
         else:
             return self.resource.Object(self.bucket_name, to_key).copy_from(
-                CopySource='{0}/{1}/build_log.json'.format(from_bucket, from_key))
+                CopySource='{0}/{1}'.format(from_bucket, from_key))
 
     def upload_file(self, path, key, cache_time=600):
         self.bucket.upload_file(path, key, ExtraArgs={'ContentType': get_mime_type(path), 'CacheControl': 'max-age={0}'.format(cache_time)})
@@ -111,7 +111,7 @@ class S3Handler(object):
     def get_objects(self, prefix=None, suffix=None):
         filtered = []
         objects = self.bucket.objects.filter(Prefix=prefix)
-        if objects and len(objects) > 0:
+        if objects:
             if suffix:
                 for obj in objects:
                     if obj.key.endswith(suffix):
