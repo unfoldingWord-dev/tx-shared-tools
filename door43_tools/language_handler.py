@@ -26,7 +26,11 @@ class Language(object):
 
     @staticmethod
     def load_languages():
+        return_val = []
 
         lang_file = 'http://td.unfoldingword.org/exports/langnames.json'
         langs = json.loads(get_url(lang_file))
-        return [Language(lang) for lang in langs]
+        for lang in langs:
+            return_val.append(Language(lang))
+
+        return return_val
