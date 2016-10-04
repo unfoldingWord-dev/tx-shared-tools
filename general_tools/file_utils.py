@@ -36,15 +36,16 @@ def unzip(source_file, destination_dir):
         zf.extractall(destination_dir)
 
 
-def add_file_to_zip(zip_file, filename, arcname=None, compress_type=None):
+def add_file_to_zip(zip_file, filename, archname=None, compress_type=None):
     """
     Zip <filename> into <zip_file> as <arcname>.
     :param str|unicode zip_file: The file name of the zip file
     :param str|unicode filename: The name of the file to add, including the path
     :param str|unicode archname: The new name, with directories, of the file, the same as filename if not given
+    :param str|unicode compress_type: The compression type
     """
     with zipfile.ZipFile(zip_file, 'a') as zf:
-        zf.write(filename, arcname, compress_type)
+        zf.write(filename, archname, compress_type)
 
 
 def make_dir(dir_name, linux_mode=0o755, error_if_not_writable=False):
@@ -83,6 +84,11 @@ def load_json_object(file_name, default=None):
     return json.loads(content)
 
 
+def read_file(file_name):
+    contents = codecs.open(file_name, 'r', encoding='utf-8').read()
+    return contents
+
+
 def write_file(file_name, file_contents, indent=None):
     """
     Writes the <file_contents> to <file_name>. If <file_contents> is not a string, it is serialized as JSON.
@@ -110,6 +116,32 @@ def get_mime_type(path):
         mime_type = "text/{0}".format(os.path.splitext(path)[1])
     return mime_type
 
+
+def get_files(dir, relative_paths=False, include_directories=False, topdown=False):
+    file_list = []
+    for root, dirs, files in os.walk(dir, topdown=topdown):
+        if relative_paths:
+            path = root[len(dir)+1:]
+        else:
+            path = root
+        for filename in files:
+            file_list.append(os.path.join(path, filename))
+        if include_directories:
+            for dirname in dirs:
+                file_list.append(os.path.join(path, dirname))
+    return file_list
+
+
+def get_subdirs(dir, relative_paths=False, topdown=False):
+    dir_list = []
+    for root, dirs, files in os.walk(dir, topdown=topdown):
+        if relative_paths:
+            path = root[len(dir)+1:]
+        else:
+            path = root
+        for dirname in dirs:
+            dir_list.append(os.path.join(path, dirname))
+    return dir_list
 
 if __name__ == '__main__':
     pass

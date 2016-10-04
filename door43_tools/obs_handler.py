@@ -87,7 +87,7 @@ class OBSInspection(object):
                 expected_frame_count = obs_data['chapters'][chapter]['frames']
                 if frame_count != expected_frame_count:
                     self.warnings.append(
-                        'Chapter {0} has only {0} frames.There should be {0}!'.format(chapter, frame_count,
+                        'Chapter {0} has only {1} frame(s).There should be {2}!'.format(chapter, frame_count,
                                                                                       expected_frame_count))
 
                 if len(content.find_all('p')) != (frame_count * 2 + 1):
