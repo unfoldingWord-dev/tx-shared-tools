@@ -8,7 +8,7 @@ from general_tools.file_utils import write_file, read_file
 from distutils.dir_util import copy_tree
 
 
-class RepoCompiler(object):
+class Preprocessor(object):
     def __init__(self, manifest, source_dir, output_dir, quiet=False):
         self.manifest = manifest
         self.source_dir = source_dir  # Local directory
@@ -24,22 +24,32 @@ class RepoCompiler(object):
         copy_tree(content_dir, self.output_dir)
 
 
-class UsfmRepoCompiler(RepoCompiler):
+class UsfmPreprocessor(Preprocessor):
     def __init__(self, *args, **kwargs):
-        super(UsfmRepoCompiler, self).__init__(*args, **kwargs)
+        super(UsfmPreprocessor, self).__init__(*args, **kwargs)
 
 
-class MarkdownRepoCompiler(RepoCompiler):
+class BibleUsfmPreprocessor(UsfmPreprocessor):
     def __init__(self, *args, **kwargs):
-        super(MarkdownRepoCompiler, self).__init__(*args, **kwargs)
+        super(BibleUsfmPreprocessor, self).__init__(*args, **kwargs)
 
 
-class TsObsMarkdownRepoCompiler(MarkdownRepoCompiler):
+class MarkdownPreprocessor(Preprocessor):
+    def __init__(self, *args, **kwargs):
+        super(MarkdownPreprocessor, self).__init__(*args, **kwargs)
+
+
+class ObsMarkdownPreprocessor(MarkdownPreprocessor):
+    def __init__(self, *args, **kwargs):
+        super(ObsMarkdownPreprocessor, self).__init__(*args, **kwargs)
+
+
+class TsObsMarkdownPreprocessor(ObsMarkdownPreprocessor):
     ignoreDirectories = ['.git', '00']
     framesIgnoreFiles = ['.DS_Store', 'reference.txt', 'title.txt']
 
     def __init__(self, *args, **kwargs):
-        super(TsObsMarkdownRepoCompiler, self).__init__(*args, **kwargs)
+        super(TsObsMarkdownPreprocessor, self).__init__(*args, **kwargs)
 
     # Get a chapter title, if the title file does not exist, it will hand back the number with a period only.
     #
@@ -100,9 +110,9 @@ class TsObsMarkdownRepoCompiler(MarkdownRepoCompiler):
             write_file(output_file, markdown)
 
 
-class TsUsfmRepoCompiler(UsfmRepoCompiler):
+class TsBibleUsfmPreprocessor(UsfmPreprocessor):
     def __init__(self, *args, **kwargs):
-        super(TsUsfmRepoCompiler, self).__init__(*args, **kwargs)
+        super(TsBibleUsfmPreprocessor, self).__init__(*args, **kwargs)
         self.title = ''
 
     def get_usfm_header(self):

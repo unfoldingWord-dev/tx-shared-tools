@@ -5,71 +5,183 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import json
 
 from six import iteritems
-from door43_tools import bible_books
+from glob import glob
+from datetime import datetime
+from door43_tools.bible_books import BOOK_NAMES, BOOK_NUMBERS
 from door43_tools.language_handler import Language
-
+from general_tools.file_utils import load_json_object, get_files, get_subdirs
 
 class Manifest(object):
     LATEST_VERSION = 6
 
-    def __init__(self, manifest_path=None):
-        # Set Defaults
+    def __init__(self, file_name=None, repo_name=None, files_path=None, meta=None):
+        """
+        Class constructor. Optionally accepts the name of a file to deserialize.
+        :param str file_name: The name of a file to deserialize into a Manifest object
+        """
+        # Defaults
         self.package_version = Manifest.LATEST_VERSION
-        self.format = "markdown"
+        self.format = ""
         self.generator = {
             "name": "",
             "build": ""
         }
         self.target_language = {
-            "id": None,
-            "name": None,
+            "id": "",
+            "name": "",
             "direction": "ltr"
         }
         self.project = {
-            "id": None,
-            "name": None
+            "id": "",
+            "name": ""
         }
         self.type = {
             "id": "text",
             "name": "Text"
         }
         self.resource = {
-            "id": None,
-            "name": None
+            "id": "",
+            "name": ""
         }
         self.source_translations = []
         self.parent_draft = {}
         self.translators = []
         self.finished_chunks = []
 
-        if manifest_path:
-            self.load_from_file(manifest_path)
+        # deserialize
+        if file_name:
+            if os.path.isfile(file_name):
+                manifest_json = load_json_object(file_name)
+                if 'package_version' not in manifest_json or manifest_json['package_version'] < Manifest.LATEST_VERSION:
+                    manifest_json = Manifest.standardize_manifest_json(manifest_json)
+                self.__dict__.update(manifest_json)
+            else:
+                raise IOError('The file {0} was not found.'.format(file_name))
+        if repo_name:
+            self.update_from_repo_name(repo_name)
+        if files_path:
+            self.update_from_files(files_path)
+        if meta:
+            self.update_from_meta(meta)
 
-    def load_from_file(self, path):
-        with open(path, 'r') as f:
-            manifest = json.load(f)
-        manifest = Manifest.standardize_manifest_json(manifest)
-        self.populate(manifest)
+        if not self.resource['id'] and (self.format == 'usfm' or (self.project['id'] and self.project['id'].lower() in BOOK_NAMES)):
+            self.resource['id'] = 'bible'
+            self.resource['name'] = 'Bible'
 
-    def populate(self, manifest):
-        for key, value in iteritems(manifest):
-            setattr(self, key, value)
+    def update_from_meta(self, meta):
+        if meta.lang and not self.target_language['id']:
+            languages = Language.load_languages()
+            found = [x for x in languages if x.lc == meta.lang]
+            name = meta.lang
+            if len(found) > 0:
+                name = found[0].ln
+            self.target_language = {'id': meta.lang, 'name': name}
+            del meta.lang
+        if meta.name and not self.project['name']:
+            self.project['name'] = meta.name
+            del meta.name
+        if meta.contributors and not self.translators:
+            self.translators = meta.contributors.split(', ')
+            del meta.contributors
+        if meta.slug:
+            self.update_from_repo_name(meta.slug)
+        for key, value in iteritems(meta.__dict__):
+            if value and not hasattr(self, key):
+                setattr(self, key, value)
+
+    def update_from_repo_name(self, repo_name):
+        if '_' in repo_name:
+            parts = repo_name.split('_')
+        else:
+            parts = repo_name.split('-')
+
+        if not self.target_language['id']:
+            languages = Language.load_languages()
+            for i, part in enumerate(parts):
+                found = [x for x in languages if x.lc == part]
+                if len(found):
+                    lang = found[0]
+                    self.target_language['id'] = lang.lc
+                    self.target_language['name'] = lang.ln
+                    self.target_language['direction'] = lang.ld
+                del parts[i]
+                break
+
+        for part in parts:
+            if not self.resource['id']:
+                if part.lower() == 'obs':
+                    self.resource['id'] = 'obs'
+                    self.resource['name'] = 'Open Bible Stories'
+                elif part.lower() == 'ulb':
+                    self.resource['id'] = 'ulb'
+                    self.resource['name'] = 'Unlocked Literal Bible'
+                elif part.lower() == 'udb':
+                    self.resource['id'] = 'udb'
+                    self.resource['name'] = 'Unlocked Dynamic Bible'
+                elif part.lower() == 'bible':
+                    self.resource['id'] = 'bible'
+                    self.resource['name'] = 'Bible'
+            if not self.format:
+                if part.lower() == 'obs':
+                    self.format = 'markdown'
+                if part.lower() == 'ulb' or part.lower() == 'udb' or part.lower() == 'bible':
+                    self.format = 'usfm'
+
+            if not self.project['id'] and part.lower() in BOOK_NAMES:
+                self.project['id'] = part.lower()
+                self.project['name'] = BOOK_NAMES[part.lower()]
+                if not self.format:
+                    self.format = 'usfm'
+                if not self.resource['id']:
+                    self.resource['id'] = 'bible'
+                    self.resource['name'] = 'Bible'
+
+    def update_from_files(self, path):
+        path = path.rstrip('/')
+        found_markdown = False
+        found_usfm = False
+        if not self.format:
+            for f in get_files(path):
+                if f.endswith('usfm'):
+                    found_usfm = True
+                elif f.endswith('.md'):
+                    found_markdown = True
+        if found_usfm:
+            if not self.format:
+                self.format = 'usfm'
+            if not self.resource['id']:
+                self.resource['id'] = 'bible'
+                self.resource['name'] = 'Bible'
+        elif found_markdown:
+            if not self.format:
+                self.format = 'markdown'
+            if not self.resource['id']:
+                self.resource['id'] = 'obs'
+                self.resource['name'] = 'Open Bible Stories'
+
+        if not self.generator['name']:
+            for subdir in glob(os.path.join(path, '*')):
+                if os.path.isdir(subdir):
+                    dir_name = subdir[len(path)+1:]
+                    try:
+                        if int(dir_name) and len(glob(os.path.join(subdir, '*.txt'))) > 0:
+                            self.generator['name'] = 'ts'
+                            break
+                    except Exception:
+                        continue
 
     @staticmethod
     def standardize_manifest_json(manifest):
-        new_manifest = manifest
-
         translators = []
-        if 'translators' in new_manifest:
-            for translator in new_manifest['translators']:
+        if 'translators' in manifest:
+            for translator in manifest['translators']:
                 if isinstance(translator, dict) and 'name' in translator:
                     translators.append(translator['name'])
                 elif isinstance(translator, basestring):
                     translators.append(translator)
-        new_manifest['translators'] = translators
+        manifest['translators'] = translators
 
         source_translations = []
         if 'source_translations' in manifest:
@@ -80,97 +192,135 @@ class Manifest(object):
                     source['language_id'] = lang
                     source['resource_id'] = resource
                     source_translations.append(source)
-                    if 'resource' not in new_manifest:
-                        new_manifest['resource'] = {'id': resource, 'name': 'UNKNOWN'}
+                    if 'resource' not in manifest:
+                        manifest['resource'] = {'id': resource, 'name': ""}
                         if resource == 'ulb':
-                            new_manifest['resource']['name'] = 'Unlocked Literal Bible'
+                            manifest['resource']['name'] = 'Unlocked Literal Bible'
                         if resource == 'udb':
-                            new_manifest['resource']['name'] = 'Unlocked Dynamic Bible'
+                            manifest['resource']['name'] = 'Unlocked Dynamic Bible'
                         if resource == 'obs':
-                            new_manifest['resource']['name'] = 'Open Bible Stories'
+                            manifest['resource']['name'] = 'Open Bible Stories'
                         if resource == 'tn':
-                            new_manifest['resource']['name'] = 'translationNotes'
+                            manifest['resource']['name'] = 'translationNotes'
                         if resource == 'tw':
-                            new_manifest['resource']['name'] = 'translationWords'
+                            manifest['resource']['name'] = 'translationWords'
                         if resource == 'tq':
-                            new_manifest['resource']['name'] = 'translationQuestions'
+                            manifest['resource']['name'] = 'translationQuestions'
                         if resource == 'ta':
-                            new_manifest['resource']['name'] = 'translationAcademy'
+                            manifest['resource']['name'] = 'translationAcademy'
                     if 'format' not in manifest:
-                        if resource == 'ulb' or resource == 'udb':
-                            new_manifest['format'] = 'usfm'
-                        else:
-                            new_manifest['format'] = 'markdown'
+                        if resource == 'ulb' or resource == 'udb' or resource == 'bible':
+                            manifest['format'] = 'usfm'
+                        elif resource == 'obs':
+                            manifest['format'] = 'markdown'
+        manifest['source_translations'] = source_translations
 
-        new_manifest['source_translations'] = source_translations
+        if 'resource' not in manifest:
+            manifest['resource'] = {'id': "", 'name': ""}
+        if 'slug' in manifest:
+            if not manifest['resource']['id']:
+                manifest['resource']['id'] = manifest['slug']
+            del manifest['slug']
+        if 'name' in manifest:
+            if not manifest['resource']['name']:
+                manifest['resource']['name'] = manifest['name']
+            del manifest['name']
+
+        if 'sources' in manifest:
+            manifest['source_translations'] = manifest['sources']
+            del manifest['sources']
+
+        if 'target_language' not in manifest:
+            manifest['target_language'] = {'id': "", 'name': "", 'direction': "l2r"}
+        if 'language' in manifest and isinstance(manifest['language'], dict):
+            if 'lc' in manifest['language']:
+                manifest['target_language']['id'] = manifest['language']['lc']
+            elif 'slug' in manifest['language']:
+                manifest['target_language']['id'] = manifest['language']['slug']
+
+            if 'ln' in manifest['language']:
+                manifest['target_language']['name'] = manifest['language']['ln']
+            elif 'name' in manifest['language']:
+                manifest['target_language']['name'] = manifest['language']['name']
+
+            if 'direction' in manifest['language']:
+                manifest['target_language']['direction'] = manifest['language']['direction']
+            elif 'dir' in manifest['language']:
+                manifest['target_language']['direction'] = manifest['language']['dir']
+            del manifest['language']
 
         if 'project' not in manifest:
-            new_manifest['project'] = {}
+            manifest['project'] = {'id': "", 'name': ""}
             if 'project_id' in manifest:
-                del new_manifest['project_id']
-                new_manifest['project'] = {'id': manifest['project_id'], 'name': 'UNKNOWN'}
-                if new_manifest['resource']['id'] == 'ulb' or new_manifest['resource']['id'] == 'udb':
-                    new_manifest['project']['name'] = bible_books.BOOK_NAMES[new_manifest['project']['id']]
+                manifest['project']['id'] = manifest['project_id']
+                if 'format' in manifest and manifest['format'] == 'usfm':
+                    manifest['project']['name'] = BOOK_NAMES[manifest['project_id']]
+                del manifest['project_id']
+        elif 'slug' in manifest['project']:
+            manifest['project']['id'] = manifest['project']['slug'].lower()
+            manifest['project']['name'] = BOOK_NAMES[manifest['project']['slug'].lower()]
+            del manifest['project']['slug']
+
+        if 'project' in manifest and 'id' in manifest['project']:
+            if manifest['project']['id'] in BOOK_NAMES:
+                if 'resource' not in manifest or 'id' not in manifest['resource']:
+                    manifest['resource'] = {
+                        'id': 'bible',
+                        'name': 'Bible'
+                    }
+                if 'format' not in manifest:
+                    manifest['format'] = 'usfm'
+            elif manifest['project']['id'] == 'obs':
+                if 'resource' not in manifest or 'id' not in manifest['resource']:
+                    manifest['resource'] = {
+                        'id': 'obs',
+                        'name': 'Open Bible Stories'
+                    }
+                if 'format' not in manifest:
+                    manifest['format'] = 'markdown'
+            else:
+                if 'format' not in manifest:
+                    manifest['format'] = 'markdown'
 
         if 'parent_drafts' not in manifest:
-            new_manifest['parent_drafts'] = {}
+            manifest['parent_drafts'] = {}
 
         if 'finished_frames' in manifest:
-            del new_manifest['finished_frames']
-            new_manifest['finished_chunks'] = manifest['finished_frames']
+            manifest['finished_chunks'] = manifest['finished_frames']
+            del manifest['finished_frames']
 
         if 'type' not in manifest:
-            new_manifest['type'] = {'id': 'text', 'name': 'Text'}
+            manifest['type'] = {'id': 'text', 'name': 'Text'}
 
         manifest['package_version'] = Manifest.LATEST_VERSION
 
-        return new_manifest
+        return manifest
 
-    @staticmethod
-    def create_manifest_from_repo_name_and_files(repo_name, files):
-        manifest = Manifest()
-        if '_' in repo_name:
-            parts = repo_name.split('_')
+
+class MetaData(object):
+    def __init__(self, file_name=None):
+        """
+        Class constructor. Optionally accepts the name of a file to deserialize.
+        :param str file_name: The name of a file to deserialize into a BibleMetaData object
+        """
+        # deserialize
+        if file_name:
+            if os.path.isfile(file_name):
+                self.__dict__ = load_json_object(file_name)
+                if 'versification' not in self.__dict__:
+                    self.versification = 'ufw'
+            else:
+                raise IOError('The file {0} was not found.'.format(file_name))
         else:
-            parts = repo_name.split('-')
-
-        for i, part in iteritems(parts):
-            languages = Language.load_languages()
-            langs = [x for x in languages if x.lc == part]
-            if len(langs):
-                lang = langs[0]
-                manifest.target_language['id'] = lang.lc
-                manifest.target_language['name'] = lang.ln
-                manifest.target_language['direction'] = lang.ld
-            del parts[i]
-            break
-
-        for part in parts:
-            if part.lower() == 'obs':
-                manifest.resource['id'] = 'obs'
-                manifest.resource['name'] = 'Open Bible Stories'
-                manifest.format = 'markdown'
-                break
-            if part.lower() == 'ulb':
-                manifest.resource['id'] = 'ulb'
-                manifest.resource['name'] = 'Unlocked Literal Bible'
-                manifest.format = 'usfm'
-                break
-            if part.lower() == 'udb':
-                manifest.resource['id'] = 'udb'
-                manifest.resource['name'] = 'Unlocked Dynamic Bible'
-                manifest.format = 'usfm'
-                break
-            if part.lower() in bible_books.BOOK_NAMES:
-                manifest.project['id'] = part.lower()
-                manifest.project['name'] = bible_books.BOOK_NAMES[part.lower()]
-                manifest.format = 'usfm'
-                if not manifest.resource['id']:
-                    manifest.resource['id'] = 'bible'
-                    manifest.resource['name'] = 'Bible'
-        if manifest.format != 'usfm':
-            for path in files:
-                _, extension = os.path.splitext(path)
-                if extension == '.usfm':
-                    manifest.format = 'usfm'
-                break
+            self.lang = ''
+            self.name = ''
+            self.slug = ''
+            self.checking_entity = ''
+            self.checking_level = '1'
+            self.comments = ''
+            self.contributors = ''
+            self.publish_date = datetime.today().strftime('%Y-%m-%d')
+            self.source_text = ''
+            self.source_text_version = ''
+            self.version = ''
+            self.versification = 'ufw'
