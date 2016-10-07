@@ -276,6 +276,11 @@ class Manifest(object):
                 manifest['resource']['name'] = manifest['name']
             del manifest['name']
 
+	if manifest['format'] == 'usfm' and manifest['resource']['id'] not in ['ulb', 'udb', 'bible']:
+	    manifest['resource']['id'] = 'bible'
+	    if not manifest['resource']['name']:
+	        Manifest.get_resource_name(manifest['resource']['id'])
+
         manifest['package_version'] = Manifest.LATEST_VERSION
 
         return manifest
