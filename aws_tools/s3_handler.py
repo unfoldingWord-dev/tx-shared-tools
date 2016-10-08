@@ -90,6 +90,9 @@ class S3Handler(object):
     def get_object(self, key):
         return self.resource.Object(self.bucket_name, key)
 
+    def redirect(self, key, location):
+        self.bucket.put_object(Key=key, WebsiteRedirectLocation=location, CacheControl='max-age=0')
+
     def get_file_contents(self, key, catch_exception = True):
         if catch_exception:
             try:
