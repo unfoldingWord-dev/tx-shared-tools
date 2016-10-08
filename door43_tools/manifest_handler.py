@@ -54,8 +54,7 @@ class Manifest(object):
         if file_name:
             if os.path.isfile(file_name):
                 manifest_json = load_json_object(file_name)
-                if 'package_version' not in manifest_json or manifest_json['package_version'] < Manifest.LATEST_VERSION:
-                    manifest_json = Manifest.standardize_manifest_json(manifest_json)
+                manifest_json = Manifest.standardize_manifest_json(manifest_json)
                 self.__dict__.update(manifest_json)
             else:
                 raise IOError('The file {0} was not found.'.format(file_name))
@@ -113,16 +112,13 @@ class Manifest(object):
             if not self.resource['id']:
                 if part.lower() == 'obs':
                     self.resource['id'] = 'obs'
-                    self.resource['name'] = 'Open Bible Stories'
                 elif part.lower() == 'ulb':
                     self.resource['id'] = 'ulb'
-                    self.resource['name'] = 'Unlocked Literal Bible'
                 elif part.lower() == 'udb':
                     self.resource['id'] = 'udb'
-                    self.resource['name'] = 'Unlocked Dynamic Bible'
                 elif part.lower() == 'bible':
                     self.resource['id'] = 'bible'
-                    self.resource['name'] = 'Bible'
+                self.resource['name'] = Manifest.get_resource_name(self.resource['id'])
             if not self.format:
                 if part.lower() == 'obs':
                     self.format = 'markdown'
@@ -194,37 +190,12 @@ class Manifest(object):
                     source_translations.append(source)
                     if 'resource' not in manifest:
                         manifest['resource'] = {'id': resource, 'name': ""}
-                        if resource == 'ulb':
-                            manifest['resource']['name'] = 'Unlocked Literal Bible'
-                        if resource == 'udb':
-                            manifest['resource']['name'] = 'Unlocked Dynamic Bible'
-                        if resource == 'obs':
-                            manifest['resource']['name'] = 'Open Bible Stories'
-                        if resource == 'tn':
-                            manifest['resource']['name'] = 'translationNotes'
-                        if resource == 'tw':
-                            manifest['resource']['name'] = 'translationWords'
-                        if resource == 'tq':
-                            manifest['resource']['name'] = 'translationQuestions'
-                        if resource == 'ta':
-                            manifest['resource']['name'] = 'translationAcademy'
                     if 'format' not in manifest:
                         if resource == 'ulb' or resource == 'udb' or resource == 'bible':
                             manifest['format'] = 'usfm'
                         elif resource == 'obs':
                             manifest['format'] = 'markdown'
         manifest['source_translations'] = source_translations
-
-        if 'resource' not in manifest:
-            manifest['resource'] = {'id': "", 'name': ""}
-        if 'slug' in manifest:
-            if not manifest['resource']['id']:
-                manifest['resource']['id'] = manifest['slug']
-            del manifest['slug']
-        if 'name' in manifest:
-            if not manifest['resource']['name']:
-                manifest['resource']['name'] = manifest['name']
-            del manifest['name']
 
         if 'sources' in manifest:
             manifest['source_translations'] = manifest['sources']
@@ -292,9 +263,48 @@ class Manifest(object):
         if 'type' not in manifest:
             manifest['type'] = {'id': 'text', 'name': 'Text'}
 
+        if 'resource' not in manifest:
+            manifest['resource'] = {'id': "", 'name': ""}
+        elif 'id' in manifest['resource'] and manifest['resource']['id'] and ('name' not in manifest['resource'] or not manifest['resource']['name']):
+            manifest['resource']['name'] = Manifest.get_resource_name(manifest['resource']['id'])
+        if 'slug' in manifest:
+            if not manifest['resource']['id']:
+                manifest['resource']['id'] = manifest['slug']
+            del manifest['slug']
+        if 'name' in manifest:
+            if not manifest['resource']['name']:
+                manifest['resource']['name'] = manifest['name']
+            del manifest['name']
+
+	if manifest['format'] == 'usfm' and manifest['resource']['id'] not in ['ulb', 'udb', 'bible']:
+	    manifest['resource']['id'] = 'bible'
+	    if not manifest['resource']['name']:
+	        Manifest.get_resource_name(manifest['resource']['id'])
+
         manifest['package_version'] = Manifest.LATEST_VERSION
 
         return manifest
+    
+    @staticmethod
+    def get_resource_name(resource_id):
+        resource_id = resource_id.lower()
+        if resource_id == 'ulb':
+            return u'Unlocked Literal Bible'
+        elif resource_id == 'udb':
+            return u'Unlocked Dynamic Bible'
+        elif resource_id == 'bible':
+            return u'Bible'
+        elif resource_id == 'obs':
+            return u'Open Bible Stories'
+        elif resource_id == 'tn':
+            return u'translationNotes'
+        elif resource_id == 'tw':
+            return u'translationWords'
+        elif resource_id == 'tq':
+            return u'translationQuestions'
+        elif resource_id == 'ta':
+            return u'translationAcademy'
+        return u''
 
 
 class MetaData(object):
