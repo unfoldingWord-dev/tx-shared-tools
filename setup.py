@@ -12,7 +12,7 @@ def read(f_name):
 setup(
     name="tx-shared-tools",
     packages=['aws_tools', 'client_tools', 'door43_tools', 'general_tools', 'gogs_tools'],
-    version="0.1.70",
+    version="0.1.76",
     author="unfoldingWord",
     author_email="info@unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",

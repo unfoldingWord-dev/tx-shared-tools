@@ -16,7 +16,7 @@ from general_tools.file_utils import load_json_object, get_files, get_subdirs
 class Manifest(object):
     LATEST_VERSION = 6
 
-    def __init__(self, file_name=None, repo_name=None, files_path=None, meta=None):
+    def __init__(self, file_name=None, meta=None, repo_name=None, files_path=None):
         """
         Class constructor. Optionally accepts the name of a file to deserialize.
         :param str file_name: The name of a file to deserialize into a Manifest object
@@ -58,12 +58,12 @@ class Manifest(object):
                 self.__dict__.update(manifest_json)
             else:
                 raise IOError('The file {0} was not found.'.format(file_name))
-        if repo_name:
-            self.update_from_repo_name(repo_name)
-        if files_path:
-            self.update_from_files(files_path)
         if meta:
             self.update_from_meta(meta)
+        if files_path:
+            self.update_from_files(files_path)
+        if repo_name:
+            self.update_from_repo_name(repo_name)
 
         if not self.resource['id'] and (self.format == 'usfm' or (self.project['id'] and self.project['id'].lower() in BOOK_NAMES)):
             self.resource['id'] = 'bible'
@@ -134,16 +134,36 @@ class Manifest(object):
                     self.resource['id'] = 'bible'
                     self.resource['name'] = 'Bible'
 
+        if not self.resource['id']:
+            self.resource['id'] = repo_name
+            self.resource['name'] = repo_name
+
+        if not self.target_language['id']:
+            self.target_language['id'] = 'en'
+            self.target_language['name'] = 'English'
+
     def update_from_files(self, path):
         path = path.rstrip('/')
+
         found_markdown = False
         found_usfm = False
+        found_html = False
+        found_text_in_numbered_dir = False
+
         if not self.format:
             for f in get_files(path):
                 if f.endswith('usfm'):
                     found_usfm = True
                 elif f.endswith('.md'):
                     found_markdown = True
+                elif f.endswith('.html'):
+                    found_html = True
+                elif f.endswith('.txt'):
+                    try:
+                        if int(os.path.basename(os.path.dirname(f))):
+                            found_text_in_numbered_dir = True
+                    except Exception:
+                        pass
         if found_usfm:
             if not self.format:
                 self.format = 'usfm'
@@ -153,9 +173,9 @@ class Manifest(object):
         elif found_markdown:
             if not self.format:
                 self.format = 'markdown'
-            if not self.resource['id']:
-                self.resource['id'] = 'obs'
-                self.resource['name'] = 'Open Bible Stories'
+        elif found_html:
+            if not self.format:
+                self.format = 'html'
 
         if not self.generator['name']:
             for subdir in glob(os.path.join(path, '*')):

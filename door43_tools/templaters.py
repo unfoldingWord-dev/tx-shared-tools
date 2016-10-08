@@ -91,11 +91,16 @@ class Templater(object):
 
             # get the language code, if we haven't yet
             if not language_code:
-                language_code = soup.html['lang']
+                if 'lang' in soup.html:
+                    language_code = soup.html['lang']
+                else:
+                    language_code = 'en'
 
             # get the title, if we haven't
-            if not title:
+            if not title and soup.head and soup.head.title:
                 title = soup.head.title.text
+            else:
+                title = os.path.basename(filename)
 
             # get the canonical UTL, if we haven't
             if not canonical:
@@ -103,10 +108,15 @@ class Templater(object):
                 if len(links) == 1:
                     canonical = links[0]['href']
 
+            if soup.body:
+                body = soup.body
+            else:
+                body = soup
+
             # get the content div from the temp file
-            soup_content = soup.body.find('div', {'id': 'content'})
+            soup_content = body.find('div', {'id': 'content'})
             if not soup_content:
-                raise Exception('No div tag with class "content" was found in {0}'.format(filename))
+                soup_content = body
 
             # insert new HTML into the template
             content_div.clear()
