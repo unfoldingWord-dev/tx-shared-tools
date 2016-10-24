@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#! /usr/bin/env sh
 ########################################################################
 #
 # NAME testhooks  -  trigger all public webhooks 1 per minute
@@ -15,6 +15,7 @@
 ########################################################################
 
 bmsql() {
+  # configure psql to return csv data
   psql --username=postgres --dbname=$db --no-align --tuples-only --field-separator=, <<END
   $* ;
 END
