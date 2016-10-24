@@ -1,0 +1,67 @@
+#! /usr/bin/env sh
+########################################################################
+#
+# NAME testhooks  -  trigger all public webhooks 1 per minute
+#
+  USAGE="sh /usr/local/bin/testhooks [--database-name <dbname>] [--host <host>] [-i <interval>]
+    Where
+      dbname   - which postgres database (shake1)
+      host     - target host of webhook (git.door43.org)
+      interval - time between triggers (60)
+"
+# DESCRIPTION  -  Login as postgres user and trigger all public 
+#      webhooks which publish repos into door43.org public site
+#
+########################################################################
+
+bmsql() {
+  # configure psql to return csv data
+  psql --username=postgres --dbname=$db --no-align --tuples-only --field-separator=, <<END
+  $* ;
+END
+}
+
+interval=60
+db=shake1
+host=git.door43.org
+
+while [ $# -gt 0 ] ; do
+  case $1 in
+    --database-name) db=$2       ; shift ;;
+    --host) host=$2              ; shift ;;
+    -i) interval=$2              ; shift ;;
+    -h|--help)  echo "Usage: $USAGE"
+       exit ;;
+    *) echo "unexpected argument: $1"
+       echo "Usage: $USAGE"
+       exit ;;
+  esac
+
+  shift
+done
+
+opt='-s -o /dev/null'
+usr=bspidel
+pwd=bmssmb_1
+ck=/tmp/cookies.txt
+tmp=testhooks_$(mktemp -u XXXXXX)
+
+bmsql "select concat( w.id, ' ', w.repo_id, ' ', r.name, ' ', u.name, ' ' ), url
+       from webhook w
+         join repository r
+           on r.id = w.repo_id
+         join \"user\" u
+           on u.id = r.owner_id" > /tmp/$tmp
+
+while read id repo rname owner rest ; do
+  echo $id $repo $rname $owner $rest
+  curl $opt -c $ck -b $ck -d "user_name=$usr&password=$pwd" https://$host/user/login
+  curl $opt -c $ck -b $ck                                   https://$host/user/settings
+  csrf=$(cat $ck | grep csrf | sed -e 's/.*csrf\t//')
+  curl $opt -c $ck -b $ck -d "_csrf=$csrf"                  https://$host/$owner/$rname/settings/hooks/$id/test
+
+  sleep $interval
+done < /tmp/$tmp
+
+rm /tmp/$tmp
+
