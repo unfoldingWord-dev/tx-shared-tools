@@ -31,13 +31,14 @@ class OBSStatus(object):
 class OBSInspection(object):
     def __init__(self, filename, chapter=None):
         """
-        Class constructor. Takes a path to a directory
-        :param object content_dir: Path to the directory of OBS chapter files and manifest
+        Class constructor. Takes a path to an OBS chapter and the chapter of the given file
+        :param string filename: Path to the OBS chapter file
+        :param string chapter: Chapter being processed
         """
         self.filename = filename
         if not chapter:
             try:
-               self.chapter = int(os.path.splitext(os.path.basename(filename))[0])
+                self.chapter = int(os.path.splitext(os.path.basename(filename))[0])
             except:
                 pass
         else:

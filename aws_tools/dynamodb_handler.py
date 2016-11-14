@@ -77,7 +77,7 @@ class DynamoDBHandler(object):
         )
 
     def query_items(self, query=None, only_fields_with_values=True):
-        filter_expression = None
+        filter_expression = ''
         if query and len(query) > 1:
             for field, value in iteritems(query):
                 if isinstance(value, dict) and 'condition' in value and 'value' in value:
@@ -90,55 +90,27 @@ class DynamoDBHandler(object):
                     continue
 
                 if condition == 'eq':
-                    if filter_expression:
-                        filter_expression &= Attr(field).eq(value)
-                    else:
-                        filter_expression = Attr(field).eq(value)
+                    filter_expression &= Attr(field).eq(value)
                 if condition == 'ne':
-                    if filter_expression:
-                        filter_expression &= Attr(field).ne(value)
-                    else:
-                        filter_expression = Attr(field).ne(value)
+                    filter_expression &= Attr(field).ne(value)
                 if condition == 'lt':
-                    if filter_expression:
-                        filter_expression &= Attr(field).lt(value)
-                    else:
-                        filter_expression = Attr(field).lt(value)
+                    filter_expression &= Attr(field).lt(value)
                 if condition == 'lte':
-                    if filter_expression:
-                        filter_expression &= Attr(field).lte(value)
-                    else:
-                        filter_expression = Attr(field).lte(value)
+                    filter_expression &= Attr(field).lte(value)
                 if condition == 'gt':
-                    if filter_expression:
-                        filter_expression &= Attr(field).gt(value)
-                    else:
-                        filter_expression = Attr(field).gt(value)
+                    filter_expression &= Attr(field).gt(value)
                 if condition == 'gte':
-                    if filter_expression:
-                        filter_expression &= Attr(field).gte(value)
-                    else:
-                        filter_expression = Attr(field).gte(value)
+                    filter_expression &= Attr(field).gte(value)
                 if condition == 'begins_with':
-                    if filter_expression:
-                        filter_expression &= Attr(field).begins_with(value)
-                    else:
-                        filter_expression = Attr(field).begins_with(value)
+                    filter_expression &= Attr(field).begins_with(value)
                 if condition == 'between':
-                    if filter_expression:
-                        filter_expression &= Attr(field).between(value)
-                    else:
-                        filter_expression = Attr(field).between(value)
+                    filter_expression &= Attr(field).between(value)
+                if condition == 'ne':
+                    filter_expression &= Attr(field).ne(value)
                 if condition == 'is_in':
-                    if filter_expression:
-                        filter_expression &= Attr(field).is_in(value)
-                    else:
-                        filter_expression = Attr(field).is_in(value)
+                    filter_expression &= Attr(field).is_in(value)
                 if condition == 'contains':
-                    if filter_expression:
-                        filter_expression &= Attr(field).contains(value)
-                    else:
-                        filter_expression = Attr(field).contains(value)
+                    filter_expression &= Attr(field).contains(value)
                 else:
                     raise Exception('Invalid filter condition: {0}'.format(condition))
 
