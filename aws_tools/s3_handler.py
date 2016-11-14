@@ -17,7 +17,6 @@ from general_tools.file_utils import get_mime_type
 
 
 class S3Handler(object):
-    
     def __init__(self, bucket_name=None, aws_access_key_id=None, aws_secret_access_key=None, aws_region_name='us-west-2'):
         if aws_access_key_id and aws_secret_access_key:
             session = Session(aws_access_key_id=aws_access_key_id,
@@ -88,7 +87,16 @@ class S3Handler(object):
         self.bucket.upload_file(path, key, ExtraArgs={'ContentType': get_mime_type(path), 'CacheControl': 'max-age={0}'.format(cache_time)})
 
     def get_object(self, key):
-        return self.resource.Object(self.bucket_name, key)
+        return self.resource.Object(bucket_name=self.bucket_name, key=key)
+
+    def get_contents(self, key, catch_exception=True):
+        if catch_exception:
+            try:
+                return self.get_object(key).get()['Body'].read()
+            except:
+                return ''
+        else:
+            return self.get_object(key)['Body'].read()
 
     def redirect(self, key, location):
         self.bucket.put_object(Key=key, WebsiteRedirectLocation=location, CacheControl='max-age=0')
