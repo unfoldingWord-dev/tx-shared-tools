@@ -10,9 +10,9 @@ def read(f_name):
     return open(os.path.join(os.path.dirname(__file__), f_name)).read()
 
 setup(
-    name="tx-shared-tools",
+    name="tx_shared_tools",
     packages=['aws_tools', 'client_tools', 'door43_tools', 'general_tools', 'gogs_tools'],
-    version="0.1.77",
+    version="0.1.78",
     author="unfoldingWord",
     author_email="info@unfoldingword.org",
     description="A collection of useful scripts abd classes for tX",
