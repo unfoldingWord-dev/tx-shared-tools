@@ -1,9 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import json
 
-from glob import glob
 from bs4 import BeautifulSoup
 
 from general_tools.file_utils import load_json_object
