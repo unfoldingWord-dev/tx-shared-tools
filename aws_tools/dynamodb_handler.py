@@ -77,12 +77,16 @@ class DynamoDBHandler(object):
         )
 
     def query_items(self, query=None, only_fields_with_values=True):
-        filter_expression = None
+        filter_expression = ''
         if query and len(query) > 1:
             for field, value in iteritems(query):
+                value = None
+                value2 = None
                 if isinstance(value, dict) and 'condition' in value and 'value' in value:
                     condition = value['condition']
                     value = value['value']
+                    if 'value2' in value:
+                        value2 = value['value2']
                 else:
                     condition = 'eq'
 
@@ -104,7 +108,7 @@ class DynamoDBHandler(object):
                 if condition == 'begins_with':
                     filter_expression &= Attr(field).begins_with(value)
                 if condition == 'between':
-                    filter_expression &= Attr(field).between(value)
+                    filter_expression &= Attr(field).between(value, value2)
                 if condition == 'ne':
                     filter_expression &= Attr(field).ne(value)
                 if condition == 'is_in':

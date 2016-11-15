@@ -1,9 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import json
 
-from glob import glob
 from bs4 import BeautifulSoup
 
 from general_tools.file_utils import load_json_object
@@ -29,68 +27,57 @@ class OBSStatus(object):
 
 
 class OBSInspection(object):
-    def __init__(self, content_dir=None):
+    def __init__(self, filename, chapter=None):
         """
-        Class constructor. Takes a path to a directory
-        :param object content_dir: Path to the directory of OBS chapter files and manifest
+        Class constructor. Takes a path to an OBS chapter and the chapter of the given file
+        :param string filename: Path to the OBS chapter file
+        :param string chapter: Chapter being processed
         """
-        self.content_dir = content_dir
-        self.files = sorted(glob(os.path.join(self.content_dir, '*.html')))
+        self.filename = filename
+        if not chapter:
+            try:
+                self.chapter = int(os.path.splitext(os.path.basename(filename))[0])
+            except:
+                pass
+        else:
+            self.chapter = chapter
+
         self.manifest = {}
         self.warnings = []
         self.errors = []
 
     def run(self):
-        self.check_files()
+        if not self.chapter:
+            return
 
-    def check_files(self):
-        """
-        Checks this chapter for problems
-        :returns list<str>
-        """
-        self.warnings = []
+        if not os.path.isfile(self.filename):
+            self.warnings.append('Chapter {0} does not exist!'.format(self.chapter))
+            return
 
-        # get manifest.json
-        manifest_filepath = os.path.join(self.content_dir, 'manifest.json')
-        if os.path.isfile(manifest_filepath):
-            with open(manifest_filepath) as manifest_file:
-                self.manifest = json.load(manifest_file)
+        with open(self.filename) as chapter_file:
+            chapter_html = chapter_file.read()
 
-        for i in range(1, 51):
-            try:
-                chapter = str(i).zfill(2)
-                filename = os.path.join(self.content_dir, chapter + '.html')
+        soup = BeautifulSoup(chapter_html, 'html.parser')
 
-                if not os.path.isfile(filename):
-                    self.warnings.append('Chapter {0} does not exist!'.format(chapter))
-                    continue
+        if not soup.find('body'):
+            self.warnings.append('Chapter {0} has no content!'.format(self.chapter))
+            return
 
-                with open(filename) as chapter_file:
-                    chapter_html = chapter_file.read()
+        content = soup.body.find(id='content')
 
-                soup = BeautifulSoup(chapter_html, 'html.parser')
+        if not content:
+            self.warnings.append('Chapter {0} has no content!'.format(self.chapter))
+            return
 
-                if not soup.find('body'):
-                    self.warnings.append('Chapter {0} has no content!'.format(chapter))
-                    continue
+        if not content.find('h1'):
+            self.warnings.append('Chapter {0} does not have a title!'.format(self.chapter))
 
-                content = soup.body.find(id='content')
+        frame_count = len(content.find_all('img'))
+        expected_frame_count = obs_data['chapters'][str(self.chapter).zfill(2)]['frames']
+        if frame_count != expected_frame_count:
+            self.warnings.append(
+                'Chapter {0} has only {1} frame(s).There should be {2}!'.format(self.chapter, frame_count,
+                                                                                expected_frame_count))
 
-                if not content:
-                    self.warnings.append('Chapter {0} has no content!'.format(chapter))
-                    continue
-
-                if not content.find('h1'):
-                    self.warnings.append('Chapter {0} does not have a title!'.format(chapter))
-
-                frame_count = len(content.find_all('img'))
-                expected_frame_count = obs_data['chapters'][chapter]['frames']
-                if frame_count != expected_frame_count:
-                    self.warnings.append(
-                        'Chapter {0} has only {1} frame(s).There should be {2}!'.format(chapter, frame_count,
-                                                                                      expected_frame_count))
-
-                if len(content.find_all('p')) != (frame_count * 2 + 1):
-                    self.warnings.append('Bible reference not found at end of chapter {0}!'.format(chapter))
-            except Exception as e:
-                self.errors.append(e.message)
+        if len(content.find_all('p')) != (frame_count * 2 + 1):
+            self.warnings.append('Bible reference not found at end of chapter {0}!'.format(self.chapter))
