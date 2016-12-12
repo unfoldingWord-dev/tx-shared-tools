@@ -98,9 +98,9 @@ def load_json_object(file_name, default=None):
     return json.loads(content)
 
 
-def read_file(file_name):
-    contents = codecs.open(file_name, 'r', encoding='utf-8').read()
-    return contents
+def read_file(file_name, encoding='utf-8-sig'):
+    with codecs.open(file_name, 'r', encoding=encoding) as f:
+        return f.read()
 
 
 def write_file(file_name, file_contents, indent=None):
