@@ -77,48 +77,53 @@ class DynamoDBHandler(object):
         )
 
     def query_items(self, query=None, only_fields_with_values=True):
-        filter_expression = ''
+        filter_expression = None
         if query and len(query) > 1:
             for field, value in iteritems(query):
-                value = None
                 value2 = None
                 if isinstance(value, dict) and 'condition' in value and 'value' in value:
-                    condition = value['condition']
+                    condition_str = value['condition']
                     value = value['value']
-                    if 'value2' in value:
-                        value2 = value['value2']
+                    if condition_str == "between":
+                        value, value2 = value["value"], value["value2"]
                 else:
-                    condition = 'eq'
+                    value = None
+                    condition_str = 'eq'
 
                 if not value and only_fields_with_values:
                     continue
 
-                if condition == 'eq':
-                    filter_expression &= Attr(field).eq(value)
-                if condition == 'ne':
-                    filter_expression &= Attr(field).ne(value)
-                if condition == 'lt':
-                    filter_expression &= Attr(field).lt(value)
-                if condition == 'lte':
-                    filter_expression &= Attr(field).lte(value)
-                if condition == 'gt':
-                    filter_expression &= Attr(field).gt(value)
-                if condition == 'gte':
-                    filter_expression &= Attr(field).gte(value)
-                if condition == 'begins_with':
-                    filter_expression &= Attr(field).begins_with(value)
-                if condition == 'between':
-                    filter_expression &= Attr(field).between(value, value2)
-                if condition == 'ne':
-                    filter_expression &= Attr(field).ne(value)
-                if condition == 'is_in':
-                    filter_expression &= Attr(field).is_in(value)
-                if condition == 'contains':
-                    filter_expression &= Attr(field).contains(value)
+                if condition_str == 'eq':
+                    condition = Attr(field).eq(value)
+                elif condition_str == 'ne':
+                    condition = Attr(field).ne(value)
+                elif condition_str == 'lt':
+                    condition = Attr(field).lt(value)
+                elif condition_str == 'lte':
+                    condition = Attr(field).lte(value)
+                elif condition_str == 'gt':
+                    condition = Attr(field).gt(value)
+                elif condition_str == 'gte':
+                    condition = Attr(field).gte(value)
+                elif condition_str == 'begins_with':
+                    condition = Attr(field).begins_with(value)
+                elif condition_str == 'between':
+                    condition = Attr(field).between(value, value2)
+                elif condition_str == 'ne':
+                    condition = Attr(field).ne(value)
+                elif condition_str == 'is_in':
+                    condition = Attr(field).is_in(value)
+                elif condition_str == 'contains':
+                    condition = Attr(field).contains(value)
                 else:
-                    raise Exception('Invalid filter condition: {0}'.format(condition))
+                    raise Exception('Invalid filter condition: {0}'.format(condition_str))
 
-        if filter_expression:
+                if filter_expression is None:
+                    filter_expression = condition
+                else:
+                    filter_expression &= condition
+
+        if filter_expression is not None:
             response = self.table.scan(
                 FilterExpression=filter_expression
             )
