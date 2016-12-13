@@ -150,7 +150,7 @@ def get_subdirs(dir, relative_paths=False, topdown=False):
     dir_list = []
     for root, dirs, files in os.walk(dir, topdown=topdown):
         if relative_paths:
-            path = root[len(dir)+1:]
+            path = os.path.relpath(root, dir)
         else:
             path = root
         for dirname in dirs:
