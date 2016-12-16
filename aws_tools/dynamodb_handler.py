@@ -109,8 +109,6 @@ class DynamoDBHandler(object):
                     condition = Attr(field).begins_with(value)
                 elif condition_str == 'between':
                     condition = Attr(field).between(value, value2)
-                elif condition_str == 'ne':
-                    condition = Attr(field).ne(value)
                 elif condition_str == 'is_in':
                     condition = Attr(field).is_in(value)
                 elif condition_str == 'contains':

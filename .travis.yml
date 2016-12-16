@@ -4,8 +4,11 @@ python:
 - '2.7'
 - '3.5'
 install:
+- sudo apt-get install pandoc
 - pip install coveralls
-script: coverage run setup.py test
+- pip install -r test_requirements.txt
+script:
+- coverage run --source=aws_tools,general_tools setup.py test
 after_success:
 - coveralls
 deploy:
