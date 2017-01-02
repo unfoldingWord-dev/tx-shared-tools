@@ -15,15 +15,19 @@ def get_url(url, catch_exception=False):
     :param str|unicode url: URL to open
     :param bool catch_exception: If <True> catches all exceptions and returns <False>
     """
+    return _get_url(url, catch_exception, urlopen=urllib2.urlopen)
+
+
+def _get_url(url, catch_exception, urlopen):
     if catch_exception:
         # noinspection PyBroadException
         try:
-            with closing(urllib2.urlopen(url)) as request:
+            with closing(urlopen(url)) as request:
                 response = request.read()
         except:
             response = False
     else:
-        with closing(urllib2.urlopen(url)) as request:
+        with closing(urlopen(url)) as request:
             response = request.read()
 
     # convert bytes to str (Python 3.5)
@@ -37,8 +41,12 @@ def download_file(url, outfile):
     """
     Downloads a file and saves it.
     """
+    _download_file(url, outfile, urlopen=urllib2.urlopen)
+
+
+def _download_file(url, outfile, urlopen):
     try:
-        with closing(urllib2.urlopen(url)) as request:
+        with closing(urlopen(url)) as request:
             with open(outfile, 'wb') as fp:
                 shutil.copyfileobj(request, fp)
 
