@@ -1,4 +1,4 @@
-language: 
+language:
 - python
 python:
 - '2.7'
@@ -8,7 +8,7 @@ install:
 - pip install coveralls
 - pip install -r test_requirements.txt
 script:
-- coverage run --source=aws_tools,general_tools setup.py test
+- coverage run --source=aws_tools,general_tools test_setup.py test
 after_success:
 - coveralls
 deploy:

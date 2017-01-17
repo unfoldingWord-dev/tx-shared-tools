@@ -25,5 +25,6 @@ setup(
         'boto3',
         'bs4',
         'gogs_client'
-    ]
+    ],
+    test_suite="tests"
 )

@@ -9,9 +9,11 @@ import os
 from six import iteritems
 from glob import glob
 from datetime import datetime
-from door43_tools.bible_books import BOOK_NAMES, BOOK_NUMBERS
+from door43_tools.bible_books import BOOK_NAMES
 from door43_tools.language_handler import Language
-from general_tools.file_utils import load_json_object, get_files, get_subdirs
+from general_tools.file_utils import load_json_object, get_files
+from general_tools.string_utils import try_parse_int
+
 
 class Manifest(object):
     LATEST_VERSION = 6
@@ -65,7 +67,8 @@ class Manifest(object):
         if repo_name:
             self.update_from_repo_name(repo_name)
 
-        if not self.resource['id'] and (self.format == 'usfm' or (self.project['id'] and self.project['id'].lower() in BOOK_NAMES)):
+        if not self.resource['id'] and (
+                self.format == 'usfm' or (self.project['id'] and self.project['id'].lower() in BOOK_NAMES)):
             self.resource['id'] = 'bible'
             self.resource['name'] = 'Bible'
 
@@ -109,7 +112,7 @@ class Manifest(object):
                 break
 
         for part in parts:
-            if not self.resource['id']:
+            if 'id' not in self.resource or not self.resource['id']:
                 if part.lower() == 'obs':
                     self.resource['id'] = 'obs'
                 elif part.lower() == 'ulb':
@@ -118,7 +121,10 @@ class Manifest(object):
                     self.resource['id'] = 'udb'
                 elif part.lower() == 'bible':
                     self.resource['id'] = 'bible'
-                self.resource['name'] = Manifest.get_resource_name(self.resource['id'])
+
+                if 'id' in self.resource and self.resource['id']:
+                    self.resource['name'] = Manifest.get_resource_name(self.resource['id'])
+
             if not self.format:
                 if part.lower() == 'obs':
                     self.format = 'markdown'
@@ -134,7 +140,7 @@ class Manifest(object):
                     self.resource['id'] = 'bible'
                     self.resource['name'] = 'Bible'
 
-        if not self.resource['id']:
+        if 'id' not in self.resource or not self.resource['id']:
             self.resource['id'] = repo_name
             self.resource['name'] = repo_name
 
@@ -148,7 +154,6 @@ class Manifest(object):
         found_markdown = False
         found_usfm = False
         found_html = False
-        found_text_in_numbered_dir = False
 
         if not self.format:
             for f in get_files(path):
@@ -158,12 +163,7 @@ class Manifest(object):
                     found_markdown = True
                 elif f.endswith('.html'):
                     found_html = True
-                elif f.endswith('.txt'):
-                    try:
-                        if int(os.path.basename(os.path.dirname(f))):
-                            found_text_in_numbered_dir = True
-                    except Exception:
-                        pass
+
         if found_usfm:
             if not self.format:
                 self.format = 'usfm'
@@ -181,12 +181,11 @@ class Manifest(object):
             for subdir in glob(os.path.join(path, '*')):
                 if os.path.isdir(subdir):
                     dir_name = subdir[len(path)+1:]
-                    try:
-                        if int(dir_name) and len(glob(os.path.join(subdir, '*.txt'))) > 0:
-                            self.generator['name'] = 'ts'
-                            break
-                    except Exception:
-                        continue
+
+                    success, dir_name_int = try_parse_int(dir_name)
+                    if success and len(glob(os.path.join(subdir, '*.txt'))) > 0:
+                        self.generator['name'] = 'ts'
+                        break
 
     @staticmethod
     def standardize_manifest_json(manifest):
@@ -285,7 +284,8 @@ class Manifest(object):
 
         if 'resource' not in manifest:
             manifest['resource'] = {'id': "", 'name': ""}
-        elif 'id' in manifest['resource'] and manifest['resource']['id'] and ('name' not in manifest['resource'] or not manifest['resource']['name']):
+        elif 'id' in manifest['resource'] and manifest['resource']['id'] and (
+                'name' not in manifest['resource'] or not manifest['resource']['name']):
             manifest['resource']['name'] = Manifest.get_resource_name(manifest['resource']['id'])
         if 'slug' in manifest:
             if not manifest['resource']['id']:
@@ -304,7 +304,7 @@ class Manifest(object):
         manifest['package_version'] = Manifest.LATEST_VERSION
 
         return manifest
-    
+
     @staticmethod
     def get_resource_name(resource_id):
         resource_id = resource_id.lower()
